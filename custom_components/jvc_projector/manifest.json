@@ -1,0 +1,12 @@
+{
+  "domain": "jvc_projector",
+  "name": "JVC Projector",
+  "codeowners": ["@volatile1990"],
+  "config_flow": true,
+  "documentation": "https://github.com/volatile1990/jvc-projector-ha",
+  "integration_type": "device",
+  "iot_class": "local_polling",
+  "loggers": ["jvcprojector"],
+  "requirements": ["pyjvcprojector==2.0.6"],
+  "version": "0.1.0"
+}
