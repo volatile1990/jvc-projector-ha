@@ -37,6 +37,9 @@
     "binary_sensor": {
       "power": {
         "name": "Power"
+      },
+      "signal": {
+        "name": "Signal"
       }
     },
     "select": {

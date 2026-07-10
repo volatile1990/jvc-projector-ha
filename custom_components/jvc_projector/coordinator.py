@@ -17,7 +17,7 @@ from jvcprojector import (
 from jvcprojector.error import JvcProjectorReadWriteTimeoutError
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -304,6 +304,7 @@ class JvcProjectorDataUpdateCoordinator(DataUpdateCoordinator[dict[str, str]]):
         value: str,
         *,
         refresh: bool = True,
+        optimistic_value: str | None = None,
     ) -> None:
         """Set a projector command with connection recovery handling."""
         await self._async_run_device_command(
@@ -314,8 +315,19 @@ class JvcProjectorDataUpdateCoordinator(DataUpdateCoordinator[dict[str, str]]):
             required_command=command,
         )
 
+        if optimistic_value is not None:
+            self.async_set_command_state(command, optimistic_value)
+
         if refresh:
             await self.async_request_refresh()
+
+    @callback
+    def async_set_command_state(self, command: type[Command], value: str) -> None:
+        """Optimistically update a command after the projector acknowledged it."""
+        self.state[command] = value
+        self.async_set_updated_data(
+            {key.name: state for key, state in self.state.items()}
+        )
 
     async def async_remote(self, value: str) -> None:
         """Send a remote command with connection recovery handling."""

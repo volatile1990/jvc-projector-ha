@@ -137,7 +137,7 @@ class JvcProjectorSensorEntity(JvcProjectorEntity, SensorEntity):
 
     @property
     @override
-    def native_value(self) -> str | None:
+    def native_value(self) -> str | int | None:
         """Return the native value."""
         if self.coordinator.data is None:
             return None
@@ -149,6 +149,9 @@ class JvcProjectorSensorEntity(JvcProjectorEntity, SensorEntity):
 
         if self.device_class == SensorDeviceClass.ENUM:
             return self._options_map.get(value)
+
+        if self.command is cmd.LightTime:
+            return int(value)
 
         return value
 

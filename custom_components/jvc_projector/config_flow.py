@@ -102,7 +102,7 @@ class JvcProjectorConfigFlow(ConfigFlow, domain=DOMAIN):
             reauth_entry = self._get_reauth_entry()
             host = reauth_entry.data[CONF_HOST]
             port = reauth_entry.data[CONF_PORT]
-            password = user_input[CONF_PASSWORD]
+            password = user_input.get(CONF_PASSWORD)
 
             try:
                 _, model = await get_device_info(host, port, password)
@@ -117,7 +117,7 @@ class JvcProjectorConfigFlow(ConfigFlow, domain=DOMAIN):
             else:
                 return self.async_update_reload_and_abort(
                     reauth_entry,
-                    data_updates={**user_input, CONF_MODEL: model},
+                    data_updates={CONF_PASSWORD: password, CONF_MODEL: model},
                 )
 
         return self.async_show_form(

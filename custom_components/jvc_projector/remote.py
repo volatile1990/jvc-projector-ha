@@ -63,6 +63,7 @@ RENAMED_COMMANDS: dict[str, str] = {
 }
 
 ON_STATUS = (cmd.Power.ON, cmd.Power.WARMING)
+OFF_STATUS = (cmd.Power.STANDBY, cmd.Power.COOLING)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -83,24 +84,47 @@ class JvcProjectorRemote(JvcProjectorEntity, RemoteEntity):
     _attr_name = None
 
     @property
+    def _power_status(self) -> str | None:
+        """Return the last known detailed power status."""
+        if self.coordinator.data is None:
+            return None
+        return self.coordinator.data.get(cmd.Power.name)
+
+    @property
     @override
     def is_on(self) -> bool | None:
         """Return True if the entity is on."""
-        if self.coordinator.data is None:
+        if (power_status := self._power_status) is None:
             return None
-        return self.coordinator.data.get(cmd.Power.name) in ON_STATUS
+        return power_status in ON_STATUS
 
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
-        await self.coordinator.async_set(cmd.Power, cmd.Power.ON, refresh=False)
+        if self._power_status in ON_STATUS:
+            return
+
+        await self.coordinator.async_set(
+            cmd.Power,
+            cmd.Power.ON,
+            refresh=False,
+            optimistic_value=cmd.Power.WARMING,
+        )
         await asyncio.sleep(1)
         await self.coordinator.async_refresh()
 
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
-        await self.coordinator.async_set(cmd.Power, cmd.Power.OFF, refresh=False)
+        if self._power_status in OFF_STATUS:
+            return
+
+        await self.coordinator.async_set(
+            cmd.Power,
+            cmd.Power.OFF,
+            refresh=False,
+            optimistic_value=cmd.Power.COOLING,
+        )
         await asyncio.sleep(1)
         await self.coordinator.async_refresh()
 
